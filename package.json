@@ -1,0 +1,14 @@
+{
+  "name": "realtime-stock-ticker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n CLIENT,SERVER -c blue,green \"yarn --cwd client dev\" \"yarn --cwd server dev\"",
+    "build": "yarn --cwd client build && yarn --cwd server build",
+    "start:client": "yarn --cwd client dev",
+    "start:server": "yarn --cwd server dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}
