@@ -4,7 +4,7 @@ import { StocksProvider } from './components/WebSocketProvider';
 import { useStocks } from './hooks/useStocks';
 import type { StockPriceUpdate } from './types';
 import { StockChart } from './components/StockChart';
-import { StockList } from './components/StockList';
+import { StockInfo } from './components/StockInfo';
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -23,7 +23,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 }
 
 const Content: React.FC = () => {
-  const { stockData, previousData } = useStocks();
+  const { stockData } = useStocks();
   const [stockHistory, setStockHistory] = useState<Record<string, StockPriceUpdate[]>>({});
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
@@ -77,10 +77,11 @@ const Content: React.FC = () => {
           </select>
         </div>
 
-
+        {/* Dashboard 總覽欄 */}
+        <StockInfo selectedTicker={selectedTicker ?? 'AAPL'} />
+        
         <div className="w-full">
           <StockChart stockHistory={stockHistory} selectedTicker={selectedTicker} />
-          <StockList stockData={stockData} previousData={previousData} selectedTicker={selectedTicker} />
         </div>
 
       </div>

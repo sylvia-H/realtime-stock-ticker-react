@@ -1,7 +1,7 @@
 // src/components/WebSocketProvider.tsx
 import React, { useEffect, useState, type ReactNode } from 'react';
 import type { ServerMessage, StockPriceUpdate } from '../types';
-import { StocksContext, type StocksContextValue } from '../contexts/StocksContext';
+import { StocksContext, type ConnectionStatus, type StocksContextValue } from '../contexts/StocksContext';
 
 interface StocksProviderProps {
   children: ReactNode;
@@ -10,9 +10,16 @@ interface StocksProviderProps {
 export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
   const [stockData, setStockData] = useState<Record<string, StockPriceUpdate>>({});
   const [previousData, setPreviousData] = useState<Record<string, StockPriceUpdate>>({});
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting'); // ← 初始為連線中
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:3001');
+
+    setConnectionStatus('connecting');
+    
+    ws.onopen = () => setConnectionStatus('connected');
+    ws.onclose = () => setConnectionStatus('disconnected');
+    ws.onerror = () => setConnectionStatus('disconnected');
 
     ws.onmessage = (event) => {
       const msg: ServerMessage = JSON.parse(event.data);
@@ -40,11 +47,11 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
     return () => ws.close();
   }, []);
 
-  const value: StocksContextValue = { stockData, previousData };
+  const value: StocksContextValue = { stockData, previousData, connectionStatus };
 
   return (
     <StocksContext.Provider value={value}>
       {children}
     </StocksContext.Provider>
-  );
+  )
 };
