@@ -5,6 +5,7 @@ import { useStocks } from './hooks/useStocks';
 import type { StockPriceUpdate } from './types';
 import { StockChart } from './components/StockChart';
 import { StockInfo } from './components/StockInfo';
+import DevTools from './components/DevTools';
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -119,6 +120,7 @@ const App: React.FC = () => {
   return (
     <StocksProvider onResync={handleResync}>
       <ErrorBoundary>
+        {import.meta.env.DEV && <DevTools />}
         <Content stockHistory={stockHistory} setStockHistory={setStockHistory} />
       </ErrorBoundary>
     </StocksProvider>

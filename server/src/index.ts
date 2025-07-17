@@ -5,7 +5,7 @@ import { ServerMessage } from './types';
 const PORT = 3001;
 const wss = new WebSocketServer({ port: PORT });
 
-const tickers = ['AAPL', 'TSLA', 'MSFT']; // 多股票範例
+const tickers = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'MSFT', 'NVDA', 'META']; // 多股票範例
 const stockManager = new StockManager(tickers);
 
 // 客戶端初始連線，回傳歡迎訊息
