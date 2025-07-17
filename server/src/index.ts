@@ -9,14 +9,49 @@ const tickers = ['AAPL', 'TSLA', 'MSFT']; // 多股票範例
 const stockManager = new StockManager(tickers);
 
 // 客戶端初始連線，回傳歡迎訊息
-wss.on('connection', (ws: WebSocket) => {
+wss.on('connection', (ws: WebSocket, req) => {
   console.log('Client connected');
 
+  // 📌 若 URL 帶有 since 參數，處理補發
+  const url = new URL(req.url ?? '', `ws://${req.headers.host}`);
+  const sinceParam = url.searchParams.get('since');
+  if (sinceParam) {
+    const since = parseInt(sinceParam, 10);
+    if (!isNaN(since)) {
+      const missed = stockManager.getUpdatesSince(since);
+      const resyncMsg: ServerMessage = {
+        type: 'resync',
+        data: missed,
+      };
+      ws.send(JSON.stringify(resyncMsg));
+      console.log(`[Server] Resent ${missed.length} updates since ${since}`);
+    }
+  }
+
+  // 📌 初始歡迎訊息
   const welcomeMsg: ServerMessage = {
     type: 'welcome',
     message: 'Connected to multi-stock ticker server',
   };
   ws.send(JSON.stringify(welcomeMsg));
+
+  // 📌 客戶端主動請求補發
+  ws.on('message', (data) => {
+    try {
+      const parsed = JSON.parse(data.toString());
+      if (parsed.type === 'resync') {
+        const { lastReceived } = parsed;
+        const missedUpdates = stockManager.getUpdatesSince(lastReceived);
+        const resyncMsg: ServerMessage = {
+          type: 'resync',
+          data: missedUpdates,
+        };
+        ws.send(JSON.stringify(resyncMsg));
+      }
+    } catch (e) {
+      console.error('Invalid message from client:', e);
+    }
+  });
 
   // 客戶端關閉連線時，顯示斷線訊息
   ws.on('close', () => {
@@ -39,9 +74,16 @@ setInterval(() => {
     wss.clients.forEach((client) => {
       // 可避免連線未就緒或已關閉時送資料
       if (client.readyState === WebSocket.OPEN) {
-        client.send(msgStr);
+        try {
+          client.send(msgStr);
+        } catch (e) {
+          console.error('[Server] Failed to send message to client', e);
+        }
+      } else {
+        console.log(`[Server] Skipping client with state: ${client.readyState}`);
       }
     });
+
   });
 }, 1000);
 

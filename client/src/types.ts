@@ -8,4 +8,5 @@ export interface StockPriceUpdate {
 // 伺服器發送給客戶端的訊息型態（可擴展）
 export type ServerMessage =
   | { type: 'welcome'; message: string }
-  | { type: 'price-update'; data: StockPriceUpdate };
+  | { type: 'price-update'; data: StockPriceUpdate }
+  | { type: 'resync'; data: StockPriceUpdate[] };

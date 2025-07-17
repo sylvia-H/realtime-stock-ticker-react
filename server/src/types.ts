@@ -5,7 +5,13 @@ export interface StockPriceUpdate {
   price: string;           // 價格字串，保留兩位小數
 }
 
-// 伺服器發送給客戶端的訊息型態（可擴展）
+// 伺服器接收的訊息型別
+export type ClientMessage =
+  | { type: 'resync'; lastReceived: number }; // 客戶端請求補發資料
+
+// 伺服器發送給客戶端的訊息型別
 export type ServerMessage =
   | { type: 'welcome'; message: string }
-  | { type: 'price-update'; data: StockPriceUpdate };
+  | { type: 'price-update'; data: StockPriceUpdate }
+  | { type: 'resync'; data: StockPriceUpdate[] };
+  

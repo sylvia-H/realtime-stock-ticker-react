@@ -13,6 +13,8 @@ export class StockManager {
    */
   private prices: Map<string, number> = new Map();
   private volatilityMap: Map<string, number> = new Map();
+  // 👇 新增歷史紀錄（最多保留 500 筆）
+  private history: StockPriceUpdate[] = [];
 
   // 建構多股陣列，初始化所有股票價格為 100，並設定預設波動幅度。
   constructor(tickers: string[]) {
@@ -30,13 +32,26 @@ export class StockManager {
       const newPrice = generatePrice(prevPrice, volatility);
       this.prices.set(ticker, newPrice);
 
-      updates.push({
+      const update: StockPriceUpdate = {
         ticker,
         timestamp: Date.now(),
         price: newPrice.toFixed(2),
-      });
+      };
+
+      updates.push(update);
+      this.history.push(update);
     });
 
+    // 保留最多 500 筆歷史資料
+    if (this.history.length > 500) {
+      this.history.splice(0, this.history.length - 500);
+    }
+
     return updates;
+  }
+  
+  // 👉 提供某一 timestamp 之後的資料
+  getUpdatesSince(timestamp: number): StockPriceUpdate[] {
+    return this.history.filter((d) => d.timestamp > timestamp);
   }
 }

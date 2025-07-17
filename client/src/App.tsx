@@ -44,7 +44,13 @@ const Content: React.FC = () => {
       const updated = { ...prev };
 
       Object.entries(stockData).forEach(([ticker, data]) => {
-        const history = updated[ticker] ? [...updated[ticker], data] : [data];
+        const existing = updated[ticker] ?? [];
+        
+        // 🔒 如果這一筆資料的 timestamp 跟上一筆一樣，就不重複加入
+        const last = existing[existing.length - 1];
+        if (last && last.timestamp === data.timestamp) return;
+
+        const history = [...existing, data];
 
         // 👉 一次移除 groupSize 筆（避免滑動起點錯位）
         while (history.length > maxTicks) {
