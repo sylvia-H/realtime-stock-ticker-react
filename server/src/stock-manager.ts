@@ -4,6 +4,9 @@ import { generatePrice } from './price-generator';
 // StockManager 主要負責管理多支股票的即時價格狀態，模擬價格波動
 // 並提供最新的價格資料給 WebSocket Server 做推播
 
+const MAX_HISTORY = 500;
+const MAX_RESYNC_RETURN = 300; // ⚠️ 補發上限（可依需求調整）
+
 export class StockManager {
   /**
    * 選用 Map 來管理價格與波動率的原因
@@ -43,15 +46,30 @@ export class StockManager {
     });
 
     // 保留最多 500 筆歷史資料
-    if (this.history.length > 500) {
-      this.history.splice(0, this.history.length - 500);
+    if (this.history.length > MAX_HISTORY) {
+      this.history.splice(0, this.history.length - MAX_HISTORY);
     }
 
     return updates;
   }
   
-  // 👉 提供某一 timestamp 之後的資料
-  getUpdatesSince(timestamp: number): StockPriceUpdate[] {
-    return this.history.filter((d) => d.timestamp > timestamp);
+  /**
+   * ✅ 根據 timestamp 提供補發資料
+   * @param timestamp - 客戶端最後接收時間（毫秒）
+   * @returns 補發的 StockPriceUpdate 陣列（時間遞增）
+   */
+  getUpdatesSince(timestamp: number, ticker?: string): StockPriceUpdate[] {
+    const now = Date.now();
+    if (!Number.isFinite(timestamp) || timestamp <= 0 || timestamp > now) {
+      console.warn('[StockManager] Invalid timestamp for resync:', timestamp);
+      return [];
+    }
+
+    const filtered = this.history.filter((d) => d.timestamp > timestamp && (!ticker || d.ticker === ticker));
+
+    // ✅ 確保時間遞增順序 & 限制最多 MAX_RESYNC_RETURN 筆
+    return filtered
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-MAX_RESYNC_RETURN);
   }
 }

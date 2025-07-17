@@ -5,12 +5,13 @@ import { StocksContext, type ConnectionStatus, type StocksContextValue } from '.
 
 interface StocksProviderProps {
   children: ReactNode;
+  onResync?: (updates: StockPriceUpdate[]) => void;
 }
 
 const WS_URL = 'ws://localhost:3001';
 const RECONNECT_INTERVAL = 5000; // 毫秒
 
-export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
+export const StocksProvider: React.FC<StocksProviderProps> = ({ children, onResync }) => {
   const [stockData, setStockData] = useState<Record<string, StockPriceUpdate>>({});
   const [previousData, setPreviousData] = useState<Record<string, StockPriceUpdate>>({});
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting'); // ← 初始為連線中
@@ -20,6 +21,7 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
   const stockDataRef = useRef<Record<string, StockPriceUpdate>>({});
   // 自動斷線定時器
   const autoDisconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTimestampRef = useRef<number | null>(null);
 
   /** 📌 同步 stockDataRef */
   useEffect(() => {
@@ -51,6 +53,9 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
       ...prev,
       [update.ticker]: update,
     }));
+
+    // 更新 lastTimestampRef
+    lastTimestampRef.current = update.timestamp;
     console.log(`[${update.ticker}] prev:`, current?.price, '-> new:', update.price);
   }
 
@@ -67,7 +72,6 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
       } catch (e) {
         console.warn('Error closing previous socket:', e);
       }
-      wsRef.current = null;
     }
 
     const lastReceived = getLastTimestamp();
@@ -81,7 +85,19 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
       setConnectionStatus('connected');
       console.log('[WebSocket] Connected');
 
-      // 🔄 每 10 秒斷線一次（測試補發）
+      // 🔄 連線成功後，補發 request（resync）
+      const lastTimestamp = lastTimestampRef.current;
+      if (lastTimestamp) {
+        ws.send(
+          JSON.stringify({
+            type: 'resync',
+            since: lastTimestamp - 1, // 讓補發包含邊界 tick
+          })
+        );
+        console.log('[WebSocket] Sent resync since:', lastTimestamp);
+      }
+
+      // 🔄 測試用：每 10 秒自動關閉連線，模擬中斷
       if (autoDisconnectTimer.current) clearTimeout(autoDisconnectTimer.current);
       autoDisconnectTimer.current = setTimeout(() => {
         console.warn('[WebSocket] Auto-disconnect after 10 seconds');
@@ -114,11 +130,8 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
     };
 
     ws.onmessage = (event) => {
-      // 僅處理目前 wsRef.current 的訊息
-      if (wsRef.current !== ws) return;
-      
-      // 若連線已經不是 OPEN，直接忽略訊息
-      if (ws.readyState !== WebSocket.OPEN) return;
+      // 不處理非 wsRef.current 且連線非 WebSocket.OPEN 的資料
+      if (wsRef.current !== ws || ws.readyState !== WebSocket.OPEN) return;
       
       const msg: ServerMessage = JSON.parse(event.data);
       if (msg.type === 'price-update') {
@@ -126,6 +139,13 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
       }
 
       if (msg.type === 'resync') {
+        console.log(`[WebSocket] Received ${msg.data.length} resync ticks`);
+        // ✅ 呼叫外部 callback 傳出補發資料
+        if (typeof onResync === 'function') {
+          onResync(msg.data);
+        }
+
+        // ✅ 同步更新目前狀態資料
         msg.data.forEach((update) => {
           applyPriceUpdate(update);
         });
@@ -139,6 +159,7 @@ export const StocksProvider: React.FC<StocksProviderProps> = ({ children }) => {
   /** 📌 排程重連 */
   const scheduleReconnect = () => {
     if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+    setConnectionStatus('reconnecting');
     reconnectTimer.current = setTimeout(() => {
       connect();
     }, RECONNECT_INTERVAL);

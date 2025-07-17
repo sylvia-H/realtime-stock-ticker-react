@@ -10,7 +10,7 @@ const stockManager = new StockManager(tickers);
 
 // 客戶端初始連線，回傳歡迎訊息
 wss.on('connection', (ws: WebSocket, req) => {
-  console.log('Client connected');
+  console.log('[Server] Client connected');
 
   // 📌 若 URL 帶有 since 參數，處理補發
   const url = new URL(req.url ?? '', `ws://${req.headers.host}`);
@@ -19,12 +19,14 @@ wss.on('connection', (ws: WebSocket, req) => {
     const since = parseInt(sinceParam, 10);
     if (!isNaN(since)) {
       const missed = stockManager.getUpdatesSince(since);
-      const resyncMsg: ServerMessage = {
-        type: 'resync',
-        data: missed,
-      };
-      ws.send(JSON.stringify(resyncMsg));
-      console.log(`[Server] Resent ${missed.length} updates since ${since}`);
+      if (missed.length > 0) {
+        const resyncMsg: ServerMessage = {
+          type: 'resync',
+          data: missed,
+        };
+        ws.send(JSON.stringify(resyncMsg));
+        console.log(`[Server] Resent ${missed.length} updates since ${since}`);
+      }
     }
   }
 
@@ -40,13 +42,16 @@ wss.on('connection', (ws: WebSocket, req) => {
     try {
       const parsed = JSON.parse(data.toString());
       if (parsed.type === 'resync') {
-        const { lastReceived } = parsed;
-        const missedUpdates = stockManager.getUpdatesSince(lastReceived);
-        const resyncMsg: ServerMessage = {
-          type: 'resync',
-          data: missedUpdates,
-        };
-        ws.send(JSON.stringify(resyncMsg));
+        const since: number = parsed.since;
+        if (typeof since === 'number' && !isNaN(since)) {
+          const missedUpdates = stockManager.getUpdatesSince(since);
+          const resyncMsg: ServerMessage = {
+            type: 'resync',
+            data: missedUpdates,
+          };
+          ws.send(JSON.stringify(resyncMsg));
+          console.log(`[Server] Resent ${missedUpdates.length} updates via client msg since ${since}`);
+        }
       }
     } catch (e) {
       console.error('Invalid message from client:', e);
@@ -55,7 +60,7 @@ wss.on('connection', (ws: WebSocket, req) => {
 
   // 客戶端關閉連線時，顯示斷線訊息
   ws.on('close', () => {
-    console.log('Client disconnected');
+    console.log('[Server] Client disconnected');
   });
 });
 

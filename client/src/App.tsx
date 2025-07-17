@@ -22,9 +22,13 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 }
 
-const Content: React.FC = () => {
+interface ContentProps {
+  stockHistory: Record<string, StockPriceUpdate[]>;
+  setStockHistory: React.Dispatch<React.SetStateAction<Record<string, StockPriceUpdate[]>>>;
+}
+
+const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
   const { stockData } = useStocks();
-  const [stockHistory, setStockHistory] = useState<Record<string, StockPriceUpdate[]>>({});
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
   const tickers = Object.keys(stockData);
@@ -45,7 +49,6 @@ const Content: React.FC = () => {
 
       Object.entries(stockData).forEach(([ticker, data]) => {
         const existing = updated[ticker] ?? [];
-        
         // 🔒 如果這一筆資料的 timestamp 跟上一筆一樣，就不重複加入
         const last = existing[existing.length - 1];
         if (last && last.timestamp === data.timestamp) return;
@@ -61,7 +64,7 @@ const Content: React.FC = () => {
       });
       return updated;
     });
-  }, [stockData]);
+  }, [stockData, setStockHistory]);
 
   return (
     <div className="container w-full h-dvh flex items-center justify-center">
@@ -95,12 +98,31 @@ const Content: React.FC = () => {
   );
 };
 
-const App: React.FC = () => (
-  <StocksProvider>
-    <ErrorBoundary>
-      <Content />
-    </ErrorBoundary>
-  </StocksProvider>
-);
+const App: React.FC = () => {
+  const [stockHistory, setStockHistory] = useState<Record<string, StockPriceUpdate[]>>({});
+
+  const handleResync = (updates: StockPriceUpdate[]) => {
+    setStockHistory((prev) => {
+      const updated = { ...prev };
+      updates.forEach((data) => {
+        const ticker = data.ticker;
+        const existing = updated[ticker] ?? [];
+        if (!existing.find((d) => d.timestamp === data.timestamp)) {
+          updated[ticker] = [...existing, data];
+        }
+        console.log(`[Resync] ${ticker} - Added update at ${data.timestamp}:`, data.price);
+      });
+      return updated;
+    });
+  };
+
+  return (
+    <StocksProvider onResync={handleResync}>
+      <ErrorBoundary>
+        <Content stockHistory={stockHistory} setStockHistory={setStockHistory} />
+      </ErrorBoundary>
+    </StocksProvider>
+  );
+};
 
 export default App;

@@ -6,7 +6,7 @@ import type { StockPriceUpdate } from '../types';
 // previousData：每支股票的前一筆資料（由 WebSocketProvider 管理）
 // ConnectionStatus：連線狀態
 
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
 export interface StocksContextValue {
   stockData: Record<string, StockPriceUpdate>;
   previousData: Record<string, StockPriceUpdate>;

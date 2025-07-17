@@ -23,6 +23,10 @@ export const StockInfo: React.FC<StockInfoProps> = ({ selectedTicker }) => {
       connectionColor = 'text-yellow-600';
       connectionText = '🔄 連線中...';
       break;
+    case 'reconnecting':
+      connectionColor = 'text-yellow-500';
+      connectionText = '🟠 重新連線中...';
+      break;
     case 'connected':
       connectionColor = 'text-green-600';
       connectionText = '🟢 已連線';
