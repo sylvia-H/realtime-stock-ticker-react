@@ -2,19 +2,18 @@
 import React from 'react';
 import { useStocks } from '../hooks/useStocks';
 import { format } from 'date-fns';
+import { transformToCandlestick } from '../utils/candlestickTransformer';
+import type { StockPriceUpdate } from '../types';
 
 interface StockInfoProps {
+  stockHistory: Record<string, StockPriceUpdate[]>;
   selectedTicker: string;
 }
 
-export const StockInfo: React.FC<StockInfoProps> = ({ selectedTicker }) => {
-  const { stockData, previousData, connectionStatus } = useStocks();
+export const StockInfo: React.FC<StockInfoProps> = ({ stockHistory, selectedTicker }) => {
+  const { stockData, connectionStatus } = useStocks();
 
   const current = stockData[selectedTicker];
-  const previous = previousData[selectedTicker];
-  const isUp = current && previous && parseFloat(current.price) > parseFloat(previous.price);
-
-  const changeColor = isUp ? 'text-green-600' : 'text-red-600';
   let connectionColor = '';
   let connectionText = '';
 
@@ -40,9 +39,19 @@ export const StockInfo: React.FC<StockInfoProps> = ({ selectedTicker }) => {
   if (!current) return null;
 
   const currentPrice = parseFloat(current.price);
-  const prevPrice = previous ? parseFloat(previous.price) : currentPrice;
-  const change = currentPrice - prevPrice;
-  const percentChange = prevPrice === 0 ? 0 : (change / prevPrice) * 100;
+  const history = stockHistory[selectedTicker] ?? [];
+  const candles = transformToCandlestick(history, 10);
+
+  let currentCandleClose = 0;
+  let prevCandleClose = 0;
+  if (candles.length > 0) {
+    currentCandleClose = candles[candles.length - 1].c;
+    prevCandleClose = candles.length > 1 ? candles[candles.length - 2].c : currentCandleClose;
+  }
+  const change = currentCandleClose - prevCandleClose;
+  const percentChange = prevCandleClose === 0 ? 0 : (change / prevCandleClose) * 100;
+
+  const changeColor = change > 0 ? 'text-green-600' : 'text-red-600';
 
   const lastUpdate = current.timestamp
     ? format(new Date(current.timestamp), 'yyyy-MM-dd HH:mm:ss')
