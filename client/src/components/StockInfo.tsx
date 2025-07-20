@@ -49,27 +49,27 @@ export const StockInfo: React.FC<StockInfoProps> = ({ selectedTicker }) => {
     : '無資料';
   
   return (
-    <div className="flex items-center justify-between bg-white border rounded px-4 py-3 mb-4 shadow-sm">
-      <div className="text-sm font-medium">
+    <div className="flex items-center justify-between bg-white border rounded px-4 py-3 mb-4 shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+      <div className="text-xs md:text-sm lg:text-base">
         股票代號：<span className="font-bold text-blue-600">{selectedTicker}</span>
       </div>
-      <div className="text-sm">
+      <div className="text-xs md:text-sm lg:text-base">
         現價：
         <span className="font-bold">
           {currentPrice.toFixed(2)} 
         </span>
       </div>
-      <div className="text-sm">
+      <div className="text-xs md:text-sm lg:text-base">
         漲跌幅：
-        <span className={`ml-2 font-semibold ${changeColor}`}>
+        <span className={`ml-2 ${changeColor}`}>
           {`${change >= 0 ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)`}
         </span>
       </div>
-      <div>
-        <span className="font-medium text-gray-600">更新時間：</span>
-        <span className="text-gray-800">{lastUpdate}</span>
+      <div className="text-xs md:text-sm lg:text-base">
+        <span className="text-gray-600 dark:text-white">更新時間：</span>
+        <span className="text-gray-800 dark:text-gray-400">{lastUpdate}</span>
       </div>
-      <div className={`text-sm font-medium ${connectionColor}`}>{connectionText}</div>
+      <div className={`text-xs md:text-sm lg:text-base ${connectionColor}`}>{connectionText}</div>
     </div>
   );
 };

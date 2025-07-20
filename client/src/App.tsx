@@ -31,6 +31,12 @@ interface ContentProps {
 const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
   const { stockData } = useStocks();
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
+  // 預設主題為 dark mode
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const tickers = Object.keys(stockData);
 
@@ -68,16 +74,25 @@ const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
   }, [stockData, setStockHistory]);
 
   return (
-    <div className="container w-full h-dvh flex items-center justify-center">
-      <div className="max-w-[850px] w-full">
-        <h1 className="text-2xl font-bold justify-self-center mb-4">即時多股票價格走勢</h1>
+    <div className="w-full min-h-dvh flex items-center justify-center bg-white dark:bg-black">
+      <div className="w-full max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg px-4 my-4 md:my-8">
+        {/* Toggle Button */}
+        <div className="flex justify-end mb-2">
+          <button
+            className="px-3 py-1 rounded border font-semibold bg-gray-100 dark:bg-gray-800 dark:text-white"
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          >
+            {theme === 'light' ? '🌙 暗色模式' : '☀️ 亮色模式'}
+          </button>
+        </div>
+        <h1 className="text-base md:text-2xl font-bold text-center mb-4 dark:text-white">即時多股票價格走勢</h1>
 
-        <div className="mb-[24px]">
-          <label className="mr-[8px] font-semibold">選擇股票：</label>
+        <div className="mb-[24px] md:mb-[8px] flex flex-col md:flex-row items-start md:items-center dark:text-white">
+          <label className="mr-2 font-semibold mb-2 md:mb-0">選擇股票：</label>
           <select
             value={selectedTicker ?? ''}
             onChange={(e) => setSelectedTicker(e.target.value)}
-            className="border px-2 py-1"
+            className="border px-2 py-1 w-full md:w-auto bg-white dark:bg-black dark:text-white"
           >
             {tickers.map((ticker) => (
               <option key={ticker} value={ticker}>
@@ -89,8 +104,8 @@ const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
 
         {/* Dashboard 總覽欄 */}
         <StockInfo selectedTicker={selectedTicker ?? 'AAPL'} />
-        
-        <div className="w-full">
+
+        <div className="w-full overflow-x-auto">
           <StockChart stockHistory={stockHistory} selectedTicker={selectedTicker} />
         </div>
 

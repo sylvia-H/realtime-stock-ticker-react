@@ -57,6 +57,7 @@ const StockChartComponent: React.FC<StockChartProps> = ({ stockHistory, selected
   const candles: CandlestickDataPoint[] = useMemo(() => {
     return transformToCandlestick(raw, 5);
   }, [raw]);
+
   const data: ChartData<'candlestick', CandlestickDataPoint[], unknown> = useMemo(() => ({
     datasets: [
       {
@@ -129,19 +130,19 @@ const StockChartComponent: React.FC<StockChartProps> = ({ stockHistory, selected
   }
 
   return (
-    <div className="p-4 border rounded shadow-md bg-white">
+    <div className="p-4 border rounded shadow-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white">
       <Chart
         type="candlestick"
         key={selectedTicker}
         data={data}
         options={options}
       />
-      <div className="mt-2 text-sm text-gray-700">
+      <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">
         <strong>{selectedTicker}</strong> 技術指標：
         <ul className="mt-1 space-y-0.5">
-          <li>SMA(10): <span className="text-blue-600">{indicators.sma?.toFixed(2) || 'N/A'}</span></li>
-          <li>EMA(10): <span className="text-green-600">{indicators.ema?.toFixed(2) || 'N/A'}</span></li>
-          <li>High-Low(20): <span className="text-purple-600">{indicators.high?.toFixed(2)} / {indicators.low?.toFixed(2)}</span></li>
+          <li>SMA(10): <span className="text-blue-500">{indicators.sma?.toFixed(2) || 'N/A'}</span></li>
+          <li>EMA(10): <span className="text-green-500">{indicators.ema?.toFixed(2) || 'N/A'}</span></li>
+          <li>High-Low(20): <span className="text-purple-500">{indicators.high?.toFixed(2)} / {indicators.low?.toFixed(2)}</span></li>
         </ul>
       </div>
     </div>
