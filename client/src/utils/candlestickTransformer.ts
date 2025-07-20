@@ -15,7 +15,7 @@ export interface CandlestickDataPoint {
  */
 export function transformToCandlestick(
   history: StockPriceUpdate[],
-  groupSize = 5
+  groupSize = 10
 ): CandlestickDataPoint[] {
   const candles: CandlestickDataPoint[] = [];
 
