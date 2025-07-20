@@ -28,6 +28,11 @@ interface ContentProps {
   setStockHistory: React.Dispatch<React.SetStateAction<Record<string, StockPriceUpdate[]>>>;
 }
 
+// 共用參數
+const GROUP_SIZE = 10; // 每根 candle 的 tick 數
+const MAX_CANDLES = 30; // 最多保留的 candle 數
+const MAX_TICKS = GROUP_SIZE * MAX_CANDLES; // 每支股票最多保留的 tick 數
+
 const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
   const { stockData } = useStocks();
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
@@ -47,10 +52,6 @@ const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
   }, [tickers, selectedTicker]);
 
   useEffect(() => {
-    const groupSize = 5;
-    const maxCandles = 30;
-    const maxTicks = groupSize * maxCandles;
-
     setStockHistory((prev) => {
       const updated = { ...prev };
 
@@ -62,9 +63,13 @@ const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
 
         const history = [...existing, data];
 
-        // 👉 一次移除 groupSize 筆（避免滑動起點錯位）
-        while (history.length > maxTicks) {
-          history.splice(0, groupSize);
+        // 👉 超過 MAX_TICKS 時，移除多餘 tick，且以 GROUP_SIZE 為單位移除整根 candle
+        if (history.length > MAX_TICKS) {
+          // 計算超過的 tick 數
+          const excess = history.length - MAX_TICKS;
+          // 以 GROUP_SIZE 為單位，向上取整，確保移除的是整根 candle
+          const removeCount = Math.ceil(excess / GROUP_SIZE) * GROUP_SIZE;
+          history.splice(0, removeCount);
         }
 
         updated[ticker] = history;
@@ -103,7 +108,7 @@ const Content: React.FC<ContentProps> = ({ stockHistory, setStockHistory }) => {
         </div>
 
         {/* Dashboard 總覽欄 */}
-        <StockInfo selectedTicker={selectedTicker ?? 'AAPL'} />
+        <StockInfo stockHistory={stockHistory} selectedTicker={selectedTicker ?? 'AAPL'} />
 
         <div className="w-full overflow-x-auto">
           <StockChart stockHistory={stockHistory} selectedTicker={selectedTicker} />
@@ -124,7 +129,14 @@ const App: React.FC = () => {
         const ticker = data.ticker;
         const existing = updated[ticker] ?? [];
         if (!existing.find((d) => d.timestamp === data.timestamp)) {
-          updated[ticker] = [...existing, data];
+          const history = [...existing, data];
+          // 超過 MAX_TICKS 時，移除多餘 tick，且以 GROUP_SIZE 為單位移除整根 candle
+          if (history.length > MAX_TICKS) {
+            const excess = history.length - MAX_TICKS;
+            const removeCount = Math.ceil(excess / GROUP_SIZE) * GROUP_SIZE;
+            history.splice(0, removeCount);
+          }
+          updated[ticker] = history;
         }
         console.log(`[Resync] ${ticker} - Added update at ${data.timestamp}:`, data.price);
       });
