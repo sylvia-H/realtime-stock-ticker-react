@@ -7,7 +7,7 @@ type StockTick = {
   timestamp: number;
 };
 
-const symbols = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'MSFT', 'NVDA', 'META'];
+const symbols = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'MSFT', 'NVDA', 'META', 'NFLX', 'AMD', 'INTC','ADBE'];
 const prices: Record<string, number> = Object.fromEntries(symbols.map(s => [s, 100 + Math.random() * 50]));
 
 export function startSimulator(wss: WebSocketServer) {

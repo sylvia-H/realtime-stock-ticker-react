@@ -4,8 +4,8 @@ import { generatePrice } from './price-generator';
 // StockManager 主要負責管理多支股票的即時價格狀態，模擬價格波動
 // 並提供最新的價格資料給 WebSocket Server 做推播
 
-const MAX_HISTORY = 500;
-const MAX_RESYNC_RETURN = 300; // ⚠️ 補發上限（可依需求調整）
+const MAX_HISTORY = 5000;
+const MAX_RESYNC_RETURN = 1000; // ⚠️ 補發上限（可依需求調整）
 
 export class StockManager {
   /**
@@ -16,7 +16,7 @@ export class StockManager {
    */
   private prices: Map<string, number> = new Map();
   private volatilityMap: Map<string, number> = new Map();
-  // 👇 新增歷史紀錄（最多保留 500 筆）
+  // 👇 新增歷史紀錄（最多保留 5000 筆）
   private history: StockPriceUpdate[] = [];
 
   // 建構多股陣列，初始化所有股票價格為 100，並設定預設波動幅度。
@@ -45,7 +45,7 @@ export class StockManager {
       this.history.push(update);
     });
 
-    // 保留最多 500 筆歷史資料
+    // 保留最多 5000 筆歷史資料
     if (this.history.length > MAX_HISTORY) {
       this.history.splice(0, this.history.length - MAX_HISTORY);
     }

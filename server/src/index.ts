@@ -5,7 +5,7 @@ import { ServerMessage } from './types';
 const PORT = 3001;
 const wss = new WebSocketServer({ port: PORT });
 
-const tickers = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'MSFT', 'NVDA', 'META']; // 多股票範例
+const tickers = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'MSFT', 'NVDA', 'META', 'NFLX', 'AMD', 'INTC','ADBE']; // 多股票範例
 const stockManager = new StockManager(tickers);
 
 // 客戶端初始連線，回傳歡迎訊息
@@ -64,7 +64,7 @@ wss.on('connection', (ws: WebSocket, req) => {
   });
 });
 
-// 每秒推送所有股票最新價格
+// 每 300 毫秒推送所有股票最新價格
 setInterval(() => {
   const updates = stockManager.updatePrices();
 
@@ -90,6 +90,6 @@ setInterval(() => {
     });
 
   });
-}, 1000);
+}, 300);
 
 console.log(`WebSocket server running at ws://localhost:${PORT}`);
