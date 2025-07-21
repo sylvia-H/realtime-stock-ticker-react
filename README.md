@@ -10,6 +10,9 @@
 
 ---
 
+![](/client/src/assets/realtime-stock-ticker-react.gif)
+
+---
 ## 🛠 技術棧
 
 - **前端**：
@@ -21,56 +24,6 @@
 - **後端**：
   - Node.js (TypeScript)
   - ws (WebSocket Server)
-
----
-
-## 📦 專案結構
-
-```plaintext
-server/
-  ├── package.json
-  ├── tsconfig.json
-  └── src/
-      ├── index.ts
-      ├── price-generator.ts
-      ├── stock-manager.ts
-      ├── types.ts
-      ├── generator/
-      │   └── stockSimulator.ts
-      └── utils/
-          ├── indicators.ts
-          └── priceHistory.ts
-client/
-  ├── package.json
-  ├── tsconfig.json
-  ├── vite.config.ts
-  ├── tailwind.config.js
-  ├── postcss.config.js
-  ├── index.html
-  └── src/
-      ├── App.tsx
-      ├── main.tsx
-      ├── types.ts
-      ├── vite-env.d.ts
-      ├── index.css
-      ├── App.css
-      ├── hooks/
-      │   ├── useIndicators.ts
-      │   └── useStocks.ts
-      ├── components/
-      │   ├── StockChart.tsx
-      │   ├── StockInfo.tsx
-      │   ├── WebSocketProvider.tsx
-      │   ├── PerformanceStats.tsx
-      │   ├── DevTools.tsx
-      │   └── ...
-      ├── contexts/
-      │   └── StocksContext.ts
-      └── utils/
-          ├── calculateIndicators.ts
-          ├── candlestickTransformer.ts
-          └── ...
-```
 
 ---
 
@@ -161,3 +114,53 @@ client/
 - **斷線測試**：手動關閉 server 或拔網路，觀察自動重連與資料補發效果。
 - **多用戶同步驗證**：多瀏覽器同時連線，驗證資料一致性與效能。
 - **DevTools 擴充**：可於 DevTools.tsx 加入更多開發用工具。
+
+---
+
+## 📦 專案結構
+
+```plaintext
+server/
+  ├── package.json
+  ├── tsconfig.json
+  └── src/
+      ├── index.ts
+      ├── price-generator.ts
+      ├── stock-manager.ts
+      ├── types.ts
+      ├── generator/
+      │   └── stockSimulator.ts
+      └── utils/
+          ├── indicators.ts
+          └── priceHistory.ts
+client/
+  ├── package.json
+  ├── tsconfig.json
+  ├── vite.config.ts
+  ├── tailwind.config.js
+  ├── postcss.config.js
+  ├── index.html
+  └── src/
+      ├── App.tsx
+      ├── main.tsx
+      ├── types.ts
+      ├── vite-env.d.ts
+      ├── index.css
+      ├── App.css
+      ├── hooks/
+      │   ├── useIndicators.ts
+      │   └── useStocks.ts
+      ├── components/
+      │   ├── StockChart.tsx
+      │   ├── StockInfo.tsx
+      │   ├── WebSocketProvider.tsx
+      │   ├── PerformanceStats.tsx
+      │   ├── DevTools.tsx
+      │   └── ...
+      ├── contexts/
+      │   └── StocksContext.ts
+      └── utils/
+          ├── calculateIndicators.ts
+          ├── candlestickTransformer.ts
+          └── ...
+```
